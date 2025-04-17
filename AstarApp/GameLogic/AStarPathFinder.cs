@@ -6,7 +6,7 @@ public static class AStarPathFinder
     {
         public int x, y;
         public int g;      // Custo acumulado do início até este nó
-        public int h;      // Heurística (estimativa do custo até o objetivo)
+        public int h;      // Heurística
         public int f { get { return g + h; } } // f = g + h
         public Node parent; // Para reconstruir o caminho
 
@@ -30,8 +30,9 @@ public static class AStarPathFinder
         if (mapa.mapa[startY, startX] != 0 || mapa.mapa[goalY, goalX] != 0)
             return null;
 
-        List<Node> openSet = new List<Node>();
-        HashSet<(int, int)> closedSet = new HashSet<(int, int)>();
+        var openSet         = new PriorityQueue<Node, int>();
+        var openSetLookup   = new Dictionary<(int, int), Node>();
+        var closedSet       = new HashSet<(int, int)>();
 
         Node startNode = new Node(startX, startY)
         {
@@ -40,12 +41,15 @@ public static class AStarPathFinder
             parent = null
         };
 
-        openSet.Add(startNode);
+        openSet.Enqueue(startNode, startNode.f);
+        openSetLookup[(startX, startY)] = startNode;
+
+        int[,] directions = new int[,] { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
 
         while (openSet.Count > 0)
         {
-            openSet.Sort((a, b) => a.f.CompareTo(b.f));
-            Node current = openSet[0];
+            Node current = openSet.Dequeue();
+            openSetLookup.Remove((current.x, current.y));
 
             if (current.x == goalX && current.y == goalY)
             {
@@ -59,12 +63,8 @@ public static class AStarPathFinder
                 return path;
             }
 
-            openSet.RemoveAt(0);
             closedSet.Add((current.x, current.y));
-
             nodosPercorridos.Add(current.x + current.y * 1000);
-
-            int[,] directions = new int[,] { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
 
             for (int i = 0; i < directions.GetLength(0); i++)
             {
@@ -82,8 +82,16 @@ public static class AStarPathFinder
 
                 int tentativeG = current.g + 1;
 
-                Node neighbor = openSet.Find(n => n.x == newX && n.y == newY);
-                if (neighbor == null)
+                if (openSetLookup.TryGetValue((newX, newY), out Node neighbor))
+                {
+                    if (tentativeG < neighbor.g)
+                    {
+                        neighbor.g = tentativeG;
+                        neighbor.parent = current;
+                        openSet.Enqueue(neighbor, neighbor.g + neighbor.h); // Atualiza prioridade
+                    }
+                }
+                else
                 {
                     neighbor = new Node(newX, newY)
                     {
@@ -91,16 +99,13 @@ public static class AStarPathFinder
                         h = Heuristic(newX, newY, goalX, goalY),
                         parent = current
                     };
-                    openSet.Add(neighbor);
-                }
-                else if (tentativeG < neighbor.g)
-                {
-                    neighbor.g = tentativeG;
-                    neighbor.parent = current;
+                    openSet.Enqueue(neighbor, neighbor.g + neighbor.h);
+                    openSetLookup[(newX, newY)] = neighbor;
                 }
             }
         }
 
         return null;
     }
+
 }
