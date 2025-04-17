@@ -16,10 +16,9 @@ public static class AStarPathFinder
             this.y = y;
         }
     }
-    private static int Heuristic(int x, int y, int goalX, int goalY) => Math.Abs(goalX - x) + Math.Abs(goalY - y);
-    
 
-    public static List<(int x, int y)> Search(int startX, int startY, int goalX, int goalY, MapaGrid mapa)
+    private static int Heuristic(int x, int y, int goalX, int goalY) => Math.Abs(goalX - x) + Math.Abs(goalY - y);
+    public static List<(int x, int y)> Search(int startX, int startY, int goalX, int goalY, MapaGrid mapa, HashSet<int> nodosPercorridos)
     {
         int gridWidth = mapa.Largura;
         int gridHeight = mapa.Altura;
@@ -63,6 +62,8 @@ public static class AStarPathFinder
             openSet.RemoveAt(0);
             closedSet.Add((current.x, current.y));
 
+            nodosPercorridos.Add(current.x + current.y * 1000);
+
             int[,] directions = new int[,] { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
 
             for (int i = 0; i < directions.GetLength(0); i++)
@@ -94,7 +95,7 @@ public static class AStarPathFinder
                 }
                 else if (tentativeG < neighbor.g)
                 {
-                    neighbor.g      = tentativeG;
+                    neighbor.g = tentativeG;
                     neighbor.parent = current;
                 }
             }

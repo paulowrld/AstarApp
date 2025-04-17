@@ -369,7 +369,8 @@ public class GamePanel : Panel, Runnable
         }
         else if (CurrentAlgorithm == PathFindingAlgorithm.AStar)
         {
-            List<(int x, int y)> caminhoAStar = AStarPathFinder.Search(inicioX, inicioY, destinoX, destinoY, mapa);
+            nodosPercorridos.Clear();
+            List<(int x, int y)> caminhoAStar = AStarPathFinder.Search(inicioX, inicioY, destinoX, destinoY, mapa, nodosPercorridos);
             if (caminhoAStar != null)
             {
                 caminho = new int[caminhoAStar.Count * 2];
